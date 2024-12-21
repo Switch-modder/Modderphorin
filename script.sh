@@ -44,21 +44,25 @@ echo $ipswurl2
 _wait_for_dfu
 
 if [ -e work/iBSS.img4 ]; then
-./ipwnder -p
+cd work
+
+../ipwnder -p
 sleep 1
-./irecovery -f iBSS.img4
+../irecovery -f iBSS.img4
 sleep 1
-./irecovery -f iBSS.img4
+../irecovery -f iBSS.img4
 sleep 1
-./irecovery -f iBEC.img4
+../irecovery -f iBEC.img4
 sleep 1
-./irecovery -f devicetree.img4
+../irecovery -f devicetree.img4
 sleep 1
-./irecovery -c devicetree
+../irecovery -c devicetree
 sleep 1
-./irecovery -f kernelcache.img4
+../irecovery -f kernelcache.img4
 sleep 1
-./irecovery -c bootx &
+../irecovery -c bootx &
+
+exit
 
 fi
 
@@ -168,21 +172,29 @@ $(./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/
 _kill_if_running iproxy
 echo "device should now reboot into dfu, pls wait"
 echo "once in recovery you should follow instructions online to go back into dfu"
-fi
 
 _wait_for_dfu
 
 ./ipwnder -p
+sleep 1
 ./irecovery -f iBSS.img4
+sleep 1
 ./irecovery -f iBSS.img4
-
+sleep 1
 ./irecovery -f iBEC.img4
+sleep 1
 ./irecovery -f ramdisk.img4
+sleep 1
 ./irecovery -c ramdisk
+sleep 1
 ./irecovery -f devicetree.img4
+sleep 1
 ./irecovery -c devicetree
+sleep 1
 ./irecovery -f kernelcache.img4
+sleep 1
 ./irecovery -c bootx &
+
 read -p "Please lightly pound the enter key once device is in the ramdisk" pause1
 
 ./iproxy 2222 22 &
@@ -224,69 +236,108 @@ scp -r -P 2222 ./keybags root@localhost:/mnt2
 scp -r -P 2222 ./Baseband root@localhost:/mnt1/usr/local/standalone/firmware
 scp -P 2222 ./apticket.der root@localhost:/mnt1/System/Library/Caches/
 scp -P 2222 ./sep-firmware.img4 root@localhost:/mnt1/usr/standalone/firmware/
-scp -P 2222 root@localhost:/mnt1/etc/fstab ./fstab
-nano fstab
 scp -P 2222 fstab root@localhost:/mnt1/etc/
-$(./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/sbin/reboot &" &)
 
-else
+read -p "would you like to also delete Setup.app? " response2
 
-ssh -p2222 root@localhost
+if [[ "$response2" = 'yes' || "$response2" = 'y' ]]; then
+
+./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "rm -rf /mnt1/Applications/Setup.app"
+scp -P 2222 ./data_ark.plist.tar root@localhost:/mnt2/
+./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "tar -xvf data_ark.plist.tar -C /mnt2"
 
 fi
 
+./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "rm -rf /mnt2/ios7.tar"
+
 mkdir work
+
+else
 
 cd work
 
 if [ ! -e devicetree.img4 ]; then
 
-./pzb -g Firmware/dfu/iBSS.n51ap.RELEASE.im4p "$ipswurl1"
-
-./pzb -g Firmware/dfu/iBEC.n51ap.RELEASE.im4p "$ipswurl1"
-
-./pzb -g kernelcache.release.n51 "$ipswurl1"
-
-./pzb -g Firmware/all_flash/all_flash.n51ap.production/DeviceTree.n51ap.im4p "$ipswurl1"
-
-./img4 -i iBSS.n51ap.RELEASE.im4p -o iBSS.dec -k b4c6843dddc7c7e3727077aee6e62c4c42d112d57eeb50505c1e7be26f4d580982839da4e75cc0eb1314ecc464ec4779
-
-./img4 -i iBEC.n51ap.RELEASE.im4p -o iBEC.dec -k f800c184406ae951847b5e0207f78c89058cd17ac2e346dd315a3bdbe8b43565962896ed8bd28bfbd201c94ba94b6afb
-
-./ipatcher iBSS.dec iBSS.patched
-
-./ipatcher iBEC.dec iBEC.patched -b "-v rd=disk0s1s1 amfi=0xff cs_enforcement_disable=1 keepsyms=1 debug=0x2014e wdt=-1"
-
-./img4 -i iBSS.patched -o iBSS.img4 -M IM4M -A -T ibss
-
-./img4 -i iBEC.patched -o iBEC.img4 -M IM4M -A -T ibec
-
-./img4 -i kernelcache.release.n51 -o kernelcache.im4p -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c -D
-
-./img4 -i kernelcache.release.n51 -o kcache.raw -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c
-
-./seprmvr64lite kcache.raw kcache.patched
-
-./kerneldiff kcache.raw kcache.patched kc.bpatch
-
-./img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn -P kc.bpatch
-
-./img4 -i DeviceTree.n51ap.im4p -o dtree.raw -k 4955c27b46e5eaf7e7b3829da15fefcf83f82bb816d59b13451b1fbc21332b730f5138e40148f8815767f1f92b0f16cb
-
-./img4 -i dtree.raw -o devicetree.img4 -A -M IM4M -T rdtr
+../pzb -g Firmware/dfu/iBSS.n51ap.RELEASE.im4p "$ipswurl1"
+../pzb -g Firmware/dfu/iBEC.n51ap.RELEASE.im4p "$ipswurl1"
+../pzb -g kernelcache.release.n51 "$ipswurl1"
+../pzb -g Firmware/all_flash/all_flash.n51ap.production/DeviceTree.n51ap.im4p "$ipswurl1"
+../img4 -i iBSS.n51ap.RELEASE.im4p -o iBSS.dec -k b4c6843dddc7c7e3727077aee6e62c4c42d112d57eeb50505c1e7be26f4d580982839da4e75cc0eb1314ecc464ec4779
+../img4 -i iBEC.n51ap.RELEASE.im4p -o iBEC.dec -k f800c184406ae951847b5e0207f78c89058cd17ac2e346dd315a3bdbe8b43565962896ed8bd28bfbd201c94ba94b6afb
+../ipatcher iBSS.dec iBSS.patched
+../ipatcher iBEC.dec iBEC.patched -b "-v rd=disk0s1s1 amfi=0xff cs_enforcement_disable=1 keepsyms=1 debug=0x2014e wdt=-1"
+../img4 -i iBSS.patched -o iBSS.img4 -M IM4M -A -T ibss
+../img4 -i iBEC.patched -o iBEC.img4 -M IM4M -A -T ibec
+../img4 -i kernelcache.release.n51 -o kernelcache.im4p -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c -D
+../img4 -i kernelcache.release.n51 -o kcache.raw -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c
+../seprmvr64lite kcache.raw kcache.patched
+../kerneldiff kcache.raw kcache.patched kc.bpatch
+../img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn -P kc.bpatch
+../img4 -i kernelcache.im4p -o kernelcache -M IM4M -T krnl -P kc.bpatch
+../img4 -i DeviceTree.n51ap.im4p -o dtree.raw -k 4955c27b46e5eaf7e7b3829da15fefcf83f82bb816d59b13451b1fbc21332b730f5138e40148f8815767f1f92b0f16cb
+../img4 -i dtree.raw -o devicetree.img4 -A -M IM4M -T rdtr
 
 fi
 
-_wait_for_dfu
-./ipwnder -p
-./irecovery -f iBSS.img4
-./irecovery -f iBSS.img4
+cd ..
+scp -P 2222 ./work/kernelcache root@localhost:/mnt1/System/Library/Caches/com.apple.kernelcaches
+$(./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/sbin/reboot &" &)
+else
 
-./irecovery -f iBEC.img4
-./irecovery -f devicetree.img4
-./irecovery -c devicetree
-./irecovery -f kernelcache.img4
-./irecovery -c bootx &
+#Put into folders
+mkdir work
+
+cp IM4M work
+
+cd work
+
+if [ ! -e devicetree.img4 ]; then
+#Make the custom iOS stuff for somewhat working iOS downgrades
+../pzb -g Firmware/dfu/iBSS.n51ap.RELEASE.im4p "$ipswurl1"
+../pzb -g Firmware/dfu/iBEC.n51ap.RELEASE.im4p "$ipswurl1"
+../pzb -g kernelcache.release.n51 "$ipswurl1"
+../pzb -g Firmware/all_flash/all_flash.n51ap.production/DeviceTree.n51ap.im4p "$ipswurl1"
+../img4 -i iBSS.n51ap.RELEASE.im4p -o iBSS.dec -k b4c6843dddc7c7e3727077aee6e62c4c42d112d57eeb50505c1e7be26f4d580982839da4e75cc0eb1314ecc464ec4779
+../img4 -i iBEC.n51ap.RELEASE.im4p -o iBEC.dec -k f800c184406ae951847b5e0207f78c89058cd17ac2e346dd315a3bdbe8b43565962896ed8bd28bfbd201c94ba94b6afb
+../ipatcher iBSS.dec iBSS.patched
+../ipatcher iBEC.dec iBEC.patched -b "-v rd=disk0s1s1 amfi=0xff cs_enforcement_disable=1 keepsyms=1 debug=0x2014e wdt=-1"
+../img4 -i iBSS.patched -o iBSS.img4 -M IM4M -A -T ibss
+../img4 -i iBEC.patched -o iBEC.img4 -M IM4M -A -T ibec
+../img4 -i kernelcache.release.n51 -o kernelcache.im4p -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c -D
+../img4 -i kernelcache.release.n51 -o kcache.raw -k 315af5407859bf02143283deaa31e92e46c6ca6cb9799a6018c94d2cebb6579345f8496d5a0e72cf783e4bd4dbabc59c
+../seprmvr64lite kcache.raw kcache.patched
+../kerneldiff kcache.raw kcache.patched kc.bpatch
+../img4 -i kernelcache.im4p -o kernelcache.img4 -M IM4M -T rkrn -P kc.bpatch
+../img4 -i kernelcache.im4p -o kernelcache -M IM4M -T krnl -P kc.bpatch
+../img4 -i DeviceTree.n51ap.im4p -o dtree.raw -k 4955c27b46e5eaf7e7b3829da15fefcf83f82bb816d59b13451b1fbc21332b730f5138e40148f8815767f1f92b0f16cb
+../img4 -i dtree.raw -o devicetree.img4 -A -M IM4M -T rdtr
+
+cd ..
+./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/sbin/mount -w -t hfs /dev/disk0s1s1 /mnt1"
+./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/sbin/mount -w -t hfs /dev/disk0s1s2 /mnt2"
+scp -P 2222 ./work/kernelcache root@localhost:/mnt1/System/Library/Caches/com.apple.kernelcaches
+ssh -p2222 root@localhost
+fi
+mkdir work
+cp IM4M work
+cd work
+if [ -e devicetree.img4 ]; then
+
+fi
+#Pwn it again
+_wait_for_dfu
+../ipwnder -p
+../irecovery -f iBSS.img4
+../irecovery -f iBSS.img4
+
+../irecovery -f iBEC.img4
+../irecovery -f devicetree.img4
+../irecovery -c devicetree
+../irecovery -f kernelcache.img4
+../irecovery -c bootx &
+
+fi
+
 fi
 
 fi
