@@ -144,7 +144,7 @@ if [[ "$deviceid" = 'iPhone6,1' || "$deviceid" = 'iPhone6,2' ]]; then
     else
         echo "that version is not supported"
     fi
-    # Grab apticket off of da fone.
+    # Grab apticket plus the rest of the stuff off of the phone.
     if [ ! -e apticket.der ]; then
         echo "you need to turn on ssh&sftp over wifi on ur phone now"
         echo "ios 10.3.3 instructions"
@@ -296,7 +296,7 @@ if [[ "$deviceid" = 'iPhone6,1' || "$deviceid" = 'iPhone6,2' ]]; then
     ./irecovery -c devicetree
     ./irecovery -f kernelcache.img4
     ./irecovery -c bootx &
-    read -p "pls press the enter key once device is in the ramdisk " pause1
+    read -p "Please lightly pound the enter key once device is in the ramdisk" pause1
     ./iproxy 2222 22 &
     sleep 2
     read -p "would you like to delete all the partitions and start over? " response1
@@ -319,28 +319,28 @@ if [[ "$deviceid" = 'iPhone6,1' || "$deviceid" = 'iPhone6,2' ]]; then
         ./irecovery -c devicetree
         ./irecovery -f kernelcache.img4
         ./irecovery -c bootx &
-        read -p "pls press the enter key once device is in the ramdisk" pause1
+        read -p "Please lightly pound the enter key once device is in the ramdisk" pause1
         ./iproxy 2222 22 &
         echo "https://ios7.iarchive.app/downgrade/installing-filesystem.html"
         echo "partition 1"
-        echo "step 1, press the letter n on your keyboard and then press enter"
-        echo "step 2, press number 1 on your keyboard and press enter"
-        echo "step 3, press enter again"
+        echo "Step 1, Press the letter n on your keyboard and then press enter"
+        echo "step 2, Press number 1 on your keyboard and press enter"
+        echo "Step 3, Press enter again"
         if [ "$iosversion" = '7.1.2' ]; then
-            echo "step 4, type 786438 and then press enter"
+            echo "Step 4, type 786438 and then press enter"
         elif [ "$iosversion" = '7.0.6' ]; then
-            echo "step 4, type 786438 and then press enter"
+            echo "Step 4, type 786438 and then press enter"
         else
-            echo "step 4, type 1548290 and then press enter"
+            echo "Step 4, type 1548290 and then press enter"
         fi
-        echo "step 5, press enter one last time"
+        echo "Step 5, press enter one last time"
         echo "partition 2"
-        echo "step 1, press the letter n on your keyboard and then press enter"
-        echo "step 2, press number 2 on your keyboard and press enter"
-        echo "step 3, press enter 3 more times"
+        echo "Step 1, press the letter n on your keyboard and then press enter"
+        echo "Step 2, press number 2 on your keyboard and press enter"
+        echo "Step 3, press enter 3 more times"
         echo "last steps"
-        echo "step 1, press the letter w on your keyboard and then press enter"
-        echo "step 2, press y on your keyboard and press enter"
+        echo "Step 1, press the letter w on your keyboard and then press enter"
+        echo "Step 2, press y on your keyboard and press enter"
         ./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "gptfdisk /dev/rdisk0s1"
         ./sshpass -p 'alpine' ssh -o StrictHostKeyChecking=no -p2222 root@localhost "/bin/sync"
         sleep 2
@@ -374,9 +374,7 @@ if [[ "$deviceid" = 'iPhone6,1' || "$deviceid" = 'iPhone6,2' ]]; then
         scp -r -P 2222 ./Baseband root@localhost:/mnt1/usr/local/standalone/firmware
         scp -P 2222 ./apticket.der root@localhost:/mnt1/System/Library/Caches/
         scp -P 2222 ./sep-firmware.img4 root@localhost:/mnt1/usr/standalone/firmware/
-        scp -P 2222 root@localhost:/mnt1/etc/fstab ./fstab
-        nano fstab
-        scp -P 2222 fstab root@localhost:/mnt1/etc/
+        scp -P 2222 ./fstab root@localhost:/mnt1/etc/
 
         read -p "would you like to also delete Setup.app? " response2
         if [[ "$response2" = 'yes' || "$response2" = 'y' ]]; then
